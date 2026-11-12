@@ -1,0 +1,13 @@
+﻿,nilai,target,jenis
+ndvi_z,0.26753353343548525,ndvi,"mean|SHAP| (asosiasi prediktif, bukan kausalitas)"
+ndvi_z_l1,0.2557944142098874,ndvi,"mean|SHAP| (asosiasi prediktif, bukan kausalitas)"
+cwb3_z,0.13425366607613895,ndvi,"mean|SHAP| (asosiasi prediktif, bukan kausalitas)"
+msin,0.11007160271230382,ndvi,"mean|SHAP| (asosiasi prediktif, bukan kausalitas)"
+rain_z_l1,0.10596371397018538,ndvi,"mean|SHAP| (asosiasi prediktif, bukan kausalitas)"
+tmean_z_l1,0.0584978866409905,ndvi,"mean|SHAP| (asosiasi prediktif, bukan kausalitas)"
+tmean_z,0.058056312824768315,ndvi,"mean|SHAP| (asosiasi prediktif, bukan kausalitas)"
+asi_l1,0.03846422123101132,ndvi,"mean|SHAP| (asosiasi prediktif, bukan kausalitas)"
+asi,0.03476296866374999,ndvi,"mean|SHAP| (asosiasi prediktif, bukan kausalitas)"
+cwb3_z_l1,0.02865278453275593,ndvi,"mean|SHAP| (asosiasi prediktif, bukan kausalitas)"
+rain_z,0.028594828383680177,ndvi,"mean|SHAP| (asosiasi prediktif, bukan kausalitas)"
+mcos,0.020325784310558547,ndvi,"mean|SHAP| (asosiasi prediktif, bukan kausalitas)"

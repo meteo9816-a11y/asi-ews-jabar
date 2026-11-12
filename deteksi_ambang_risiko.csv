@@ -1,0 +1,13 @@
+﻿target,horizon,level_peringatan,keterangan,arah_ambang,ambang,n_event,n_alarm,hit_rate,precision
+asi,1,Tinggi,Peringatan cekaman agroklimat tinggi (ASI >= ambang; bukan kerusakan langsung),>=,0.75,681,348,0.3656387665198238,0.7155172413793104
+asi,1,Waspada,Peringatan cekaman agroklimat waspada (ASI >= ambang; bukan kerusakan langsung),>=,0.35,1198,741,0.43989983305509184,0.7112010796221323
+ndvi,1,Tinggi,Indikasi penurunan respons vegetasi tinggi (NDVI_z <= ambang; bukan prediksi gagal panen),<=,-1.0,436,150,0.20412844036697247,0.5933333333333334
+ndvi,1,Waspada,Indikasi penurunan respons vegetasi waspada (NDVI_z <= ambang; bukan prediksi gagal panen),<=,-0.5,869,611,0.4522439585730725,0.6432078559738135
+asi,2,Tinggi,Peringatan cekaman agroklimat tinggi (ASI >= ambang; bukan kerusakan langsung),>=,0.75,681,226,0.20411160058737152,0.6150442477876106
+asi,2,Waspada,Peringatan cekaman agroklimat waspada (ASI >= ambang; bukan kerusakan langsung),>=,0.35,1196,539,0.2993311036789298,0.6641929499072357
+ndvi,2,Tinggi,Indikasi penurunan respons vegetasi tinggi (NDVI_z <= ambang; bukan prediksi gagal panen),<=,-1.0,435,66,0.06896551724137931,0.45454545454545453
+ndvi,2,Waspada,Indikasi penurunan respons vegetasi waspada (NDVI_z <= ambang; bukan prediksi gagal panen),<=,-0.5,866,609,0.4018475750577367,0.5714285714285714
+asi,3,Tinggi,Peringatan cekaman agroklimat tinggi (ASI >= ambang; bukan kerusakan langsung),>=,0.75,682,95,0.045454545454545456,0.3263157894736842
+asi,3,Waspada,Peringatan cekaman agroklimat waspada (ASI >= ambang; bukan kerusakan langsung),>=,0.35,1201,455,0.1965029142381349,0.5186813186813187
+ndvi,3,Tinggi,Indikasi penurunan respons vegetasi tinggi (NDVI_z <= ambang; bukan prediksi gagal panen),<=,-1.0,435,26,0.01839080459770115,0.3076923076923077
+ndvi,3,Waspada,Indikasi penurunan respons vegetasi waspada (NDVI_z <= ambang; bukan prediksi gagal panen),<=,-0.5,866,355,0.20785219399538107,0.5070422535211268

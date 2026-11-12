@@ -1,0 +1,22 @@
+{
+  "catatan_bobot": "Bobot 25% per komponen merupakan bobot dasar awal yang ditetapkan secara transparan (belum adaptif). Sifat adaptif dijalankan oleh Random Forest.",
+  "r_ASI_bobot_sama_vs_ASI_t+1": 0.613266708169766,
+  "r_acak_ASI_t+1_p5_p50_p95": [
+    0.5532873530515676,
+    0.5983668649756597,
+    0.622701833322977
+  ],
+  "r_ASI_bobot_sama_vs_NDVIanom_t+1": -0.29912839988349565,
+  "r_acak_NDVI_t+1_p5_p50_p95": [
+    -0.342248404360559,
+    -0.292463636976381,
+    -0.23547831559354038
+  ],
+  "r_per_komponen_vs_NDVIanom_t+1": {
+    "vpd": -0.2535477876704012,
+    "tmax": -0.15544751439884813,
+    "defisit_air": -0.33579814974195327,
+    "defisit_tanah": -0.2720979604267594
+  },
+  "n": 5628
+}

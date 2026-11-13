@@ -5,8 +5,11 @@ ASI-EWS: Adaptive Agroclimatic Stress Intelligence –
 Sistem Peringatan Dini Cekaman Atmosfer dan Lahan Pertanian
 Berbasis Machine Learning dan Data Satelit di Jawa Barat
 
-Terintegrasi penuh dengan pipeline 02_ml_v8.py (Dual-Target: ASI & NDVI)
-serta responsif untuk tampilan Desktop & Mobile (HP).
+Fitur:
+- Dual-Target ML (ASI & NDVI) terintegrasi pipeline 02_ml_v8.py
+- Panduan Operasional Petani & Dinas Pertanian + Format Pesan WhatsApp
+- Galeri Gambar Lokal & Ekspor Batch Confusion Matrix Resolusi Tinggi untuk KTI
+- Kontrol Basemap Peta langsung di area utama (Desktop & Mobile Friendly)
 
 Jalankan lokal:
 py -m streamlit run D:\LOMBAAGRI\04_dashboard.py
@@ -29,7 +32,8 @@ import streamlit as st
 
 JUDUL_SINGKAT = "ASI-EWS Jawa Barat"
 JUDUL_KTI = (
-    "ASI-EWS: Sistem Peringatan Dini Kondisi Iklim Tanaman Padi"
+    "ASI-EWS: Adaptive Agroclimatic Stress Intelligence – "
+    "Sistem Peringatan Dini Cekaman Atmosfer dan Lahan Pertanian "
     "Berbasis Machine Learning dan Data Satelit di Jawa Barat"
 )
 
@@ -62,8 +66,8 @@ PUSAT_PETA = {"lat": -6.95, "lon": 107.60}
 
 MAP_STYLES = {
     "Carto Positron (Terang & Bersih)": "carto-positron",
-    "Carto Voyager (Jalan & Label)": "carto-voyager",
-    "OpenStreetMap (Standar)": "open-street-map",
+    "Carto Voyager (Jalan & Batas Wilayah)": "carto-voyager",
+    "OpenStreetMap (Detail Lapangan)": "open-street-map",
     "Carto Dark Matter (Mode Gelap)": "carto-darkmatter",
 }
 
@@ -71,6 +75,85 @@ LABEL_TARGET = {
     "asi": "Cekaman Agroklimat (ASI — Target Utama)",
     "ndvi": "Respons Vegetasi (Anomali NDVI — Target Pendukung)",
 }
+
+
+def konfig_unduh(nama_file: str) -> dict:
+    return {
+        "displayModeBar": True,
+        "displaylogo": False,
+        "modeBarButtonsToRemove": ["zoom2d", "pan2d", "select2d", "lasso2d", "autoScale2d"],
+        "toImageButtonOptions": {
+            "format": "png",
+            "filename": nama_file,
+            "scale": 3,
+        },
+    }
+
+
+def rekom_aksi_lapangan(status_asi: str, status_ndvi: str, pemicu: str) -> dict:
+    """Menerjemahkan output teknis ML menjadi panduan praktis Petani & Dinas."""
+    pemicu_str = str(pemicu) if pd.notna(pemicu) and str(pemicu).strip() else "Kombinasi atmosfer & kelembapan tanah"
+
+    if status_asi == "Tinggi" or status_ndvi == "Tinggi":
+        return {
+            "level": "SIAGA MERAH (PRIORITAS INTERVENSI)",
+            "warna": "#D9535D",
+            "bg": "#FDF0F1",
+            "ringkas_petani": (
+                "Risiko cekaman kekeringan/panas tinggi pada lahan sawah dalam 1–3 bulan ke depan. "
+                "Tanaman rentan mengalami penurunan pertumbuhan vegetatif jika pasokan air terlambat."
+            ),
+            "aksi_petani": [
+                "Terapkan irigasi berselang (AWD / macak-macak) dan hindari penggenangan berlebih agar stok air irigasi bertahan lebih lama.",
+                "Siapkan pompa air kelompok tani (poktan) dan manfaatkan embung/sumur pantek di wilayah tadah hujan.",
+                "Gunakan mulsa jerami di pematang/lahan untuk menekan penguapan air tanah, serta tunda pemupukan N dosis tinggi saat puncak panas.",
+                "Untuk jadwal tanam berikutnya, utamakan varietas padi toleran kekeringan (misal: Inpari 38, Inpari 39, atau Situ Bagendit).",
+            ],
+            "aksi_dinas": [
+                "Prioritaskan alokasi bantuan pompa air, BBM subsidi pertanian, dan rehabilitasi jaringan irigasi tersier di kabupaten ini.",
+                "Koordinasikan jadwal buka-tutup pintu air (gilir giring) bersama BBWS/PSDA untuk wilayah hilir.",
+                "Aktifkan pemantauan lapangan mingguan oleh PPL dan petugas POPT untuk antisipasi serangan hama sekunder (wereng/penggerek) saat cuaca panas.",
+            ],
+            "pemicu": pemicu_str,
+        }
+    elif status_asi == "Waspada" or status_ndvi == "Waspada":
+        return {
+            "level": "WASPADA KUNING (ANTISIPASI DINI)",
+            "warna": "#D98A1C",
+            "bg": "#FEF8EC",
+            "ringkas_petani": (
+                "Mulai terdeteksi peningkatan tekanan cuaca kering/hangat. Kondisi tanaman saat ini masih terkendali, "
+                "namun perlu pengaturan air dan jadwal tanam lebih disiplin."
+            ),
+            "aksi_petani": [
+                "Perbaiki saluran cacing dan tanggul petakan sawah untuk mencegah kebocoran air.",
+                "Lakukan percepatan tanam (tanam serempak) memanfaatkan sisa lengas tanah yang masih tersedia.",
+                "Gunakan pupuk organik/kompos untuk meningkatkan daya ikat air tanah dan ketahanan akar.",
+            ],
+            "aksi_dinas": [
+                "Sebarkan informasi peringatan dini bulanan ke BPP kecamatan dan gabungan kelompok tani (Gapoktan).",
+                "Inventarisasi kesiapan cadangan air embung desa dan pompa mobile di sentra padi wilayah ini.",
+            ],
+            "pemicu": pemicu_str,
+        }
+    else:
+        return {
+            "level": "NORMAL HIJAU (KONDISI KONDUSIF)",
+            "warna": "#239B75",
+            "bg": "#EDF8F4",
+            "ringkas_petani": (
+                "Kondisi agroklimat dan kehijauan vegetasi sawah berada dalam kisaran normal. "
+                "Budidaya padi dapat berjalan sesuai kalender tanam setempat."
+            ),
+            "aksi_petani": [
+                "Lanjutkan pola tanam dan pemupukan berimbang sesuai rekomendasi BPP setempat.",
+                "Tetap jaga kebersihan saluran drainase untuk mengantisipasi hujan lebat sesaat.",
+            ],
+            "aksi_dinas": [
+                "Lanjutkan pemantauan rutin bulanan dan pendampingan optimalisasi indeks pertanaman (IP).",
+            ],
+            "pemicu": pemicu_str,
+        }
 
 
 # ============================================================
@@ -400,6 +483,14 @@ st.markdown(
         line-height: 1.4;
     }}
 
+    .alert-card-tani {{
+        border-radius: 16px;
+        padding: 20px 22px;
+        margin-bottom: 16px;
+        border-left: 7px solid;
+        box-shadow: 0 6px 18px rgba(15, 46, 38, 0.06);
+    }}
+
     div[data-testid="stMetric"] {{
         background: #FFFFFF;
         border: 1px solid #DCE8E2;
@@ -557,7 +648,6 @@ def muat_data(res_dir_str: str, dash_dir_str: str, out_dir_str: str):
             data[key] = data[key].dropna(subset=["kab_code"])
             data[key]["kab_code"] = data[key]["kab_code"].astype(int)
 
-    # Normalisasi kompatibilitas OOS (v8 menggunakan aktual/pred/target; v7 menggunakan aktual_anom/pred_anom)
     oos_df = data["oos"]
     if "target" not in oos_df.columns:
         oos_df["target"] = "ndvi"
@@ -571,7 +661,6 @@ def muat_data(res_dir_str: str, dash_dir_str: str, out_dir_str: str):
 
     fc_key = data["meta"].get("skenario_prakiraan", "B_CWB3")
 
-    # Muat feature importance untuk target ASI & NDVI
     imp_dict = {}
     for tgt_k in ("asi", "ndvi"):
         p_tgt = res_dir / f"pentingnya_fitur_{tgt_k}_{fc_key}_h1.csv"
@@ -633,7 +722,6 @@ meta = D["meta"]
 res = D["res"]
 eks = D["eks"]
 
-# Cek apakah output mendukung Dual-Target (ASI & NDVI)
 IS_DUAL_TARGET = "pred_asi" in fc.columns and "peringatan_asi" in fc.columns
 
 
@@ -665,7 +753,6 @@ if "kabupaten" not in oos.columns:
     oos["kabupaten"] = oos["kab_code"].map(nama_kab)
 oos["kabupaten"] = oos["kabupaten"].fillna(oos["kab_code"].map(nama_kab)).fillna(oos["kab_code"].astype(str))
 
-# Ekstrak properti GeoJSON (DOMINAN stres & SAWAH_KM2)
 geo_props = {}
 for feat in geo.get("features", []):
     p = feat.get("properties", {})
@@ -699,7 +786,6 @@ if st.session_state.halaman == "beranda":
 
     fc_h1 = fc[fc["horizon"] == 1] if "horizon" in fc.columns else fc
 
-    # Ringkasan H+1 Target Utama (ASI) atau NDVI jika legacy
     if IS_DUAL_TARGET:
         kol_cek = "peringatan_asi"
         label_cek = "Peringatan ASI Waspada/Tinggi (H+1)"
@@ -728,7 +814,7 @@ if st.session_state.halaman == "beranda":
         </div>
         <div class="landing-hero">
             <div class="landing-badge">🌱 Karya Tulis Ilmiah • {versi_aktif} • Dual-Target Machine Learning (ASI & NDVI)</div>
-            <h1><span class="accent">ASI-EWS:</span> Sistem Peringatan Dini Kondisi Iklim Tanaman Padi Berbasis Machine Learning dan Data Satelit di Jawa Barat</h1>
+            <h1><span class="accent">ASI-EWS:</span> Adaptive Agroclimatic Stress Intelligence – Sistem Peringatan Dini Cekaman Atmosfer dan Lahan Pertanian Berbasis Machine Learning dan Data Satelit di Jawa Barat</h1>
             <p>
                 Sistem peringatan dini berbasis <strong>Random Forest</strong> dengan desain keluaran ganda:
                 <strong>(1) Target Utama:</strong> memprediksi <em>Atmospheric Stress Index (ASI)</em> untuk deteksi dini potensi
@@ -754,10 +840,10 @@ if st.session_state.halaman == "beranda":
                 st.session_state.folder_aktif = pilihan_fld
                 st.rerun()
 
-    col_cta1, col_cta2, _ = st.columns([1.5, 1.5, 2.0])
+    col_cta1, col_cta2, _ = st.columns([1.6, 1.5, 1.9])
     with col_cta1:
         st.button(
-            "🚀 Buka Dashboard Analisis →",
+            "🚀 Buka Dashboard & Panduan Lapangan →",
             type="primary",
             use_container_width=True,
             on_click=pindah_ke,
@@ -816,10 +902,10 @@ if st.session_state.halaman == "beranda":
                 </div>
             </div>
             <div class="pillar-card">
-                <div class="pillar-icon">🌏</div>
-                <div class="pillar-title">BMKG, CHIRPS & ENSO/IOD</div>
+                <div class="pillar-icon">🚜</div>
+                <div class="pillar-title">Ramah Petani & Dinas</div>
                 <div class="pillar-text">
-                    Komparasi hujan ZOM BMKG vs satelit CHIRPS serta sinyal global Niño 3.4 & DMI ({periode_info[0]} s.d. {periode_info[1]}).
+                    Terjemahan otomatis status peringatan menjadi langkah irigasi, pompa air, dan template pesan WhatsApp PPL.
                 </div>
             </div>
             <div class="pillar-card">
@@ -851,6 +937,9 @@ fc_key_aktif = meta.get("skenario_prakiraan", "B_CWB3")
 basis_hindcast = meta.get("basis_hindcast", "2025-12")
 target_hindcast = ", ".join(meta.get("target_hindcast", ["2026-01", "2026-02", "2026-03"]))
 
+if "pilihan_peta_aktif" not in st.session_state:
+    st.session_state.pilihan_peta_aktif = list(MAP_STYLES.keys())[0]
+
 with st.sidebar:
     st.markdown("## 🌾 ASI-EWS JABAR")
     st.caption(
@@ -879,14 +968,6 @@ with st.sidebar:
             st.rerun()
 
     st.divider()
-    st.markdown("### 🗺️ Pengaturan Peta")
-    pilihan_peta = st.selectbox(
-        "Pilih Basemap Peta",
-        list(MAP_STYLES.keys()),
-        index=0,
-    )
-
-    st.divider()
     st.markdown("### 📍 Cakupan Spasial")
     st.write(
         f"**{len(nama_kab)} Kabupaten/Kota** sentra sawah "
@@ -901,10 +982,11 @@ with st.sidebar:
     st.caption(f"Folder aktif: {st.session_state.folder_aktif}")
 
 
-def peta(df, kolom_warna, judul, tinggi=500, **kwargs):
+def peta(df, kolom_warna, judul, tinggi=510, **kwargs):
     if df.empty:
         return None
 
+    style_aktif = MAP_STYLES[st.session_state.pilihan_peta_aktif]
     argumen = dict(
         data_frame=df,
         geojson=geo,
@@ -919,9 +1001,9 @@ def peta(df, kolom_warna, judul, tinggi=500, **kwargs):
     )
 
     if hasattr(px, "choropleth_map"):
-        fig = px.choropleth_map(**argumen, map_style=MAP_STYLES[pilihan_peta])
+        fig = px.choropleth_map(**argumen, map_style=style_aktif)
     else:
-        fig = px.choropleth_mapbox(**argumen, mapbox_style=MAP_STYLES[pilihan_peta])
+        fig = px.choropleth_mapbox(**argumen, mapbox_style=style_aktif)
 
     fig.update_layout(
         height=tinggi,
@@ -937,14 +1019,14 @@ def peta(df, kolom_warna, judul, tinggi=500, **kwargs):
             y=0.01,
             xanchor="left",
             x=0.01,
-            bgcolor="rgba(255,255,255,0.88)",
+            bgcolor="rgba(255,255,255,0.90)",
             title_text="",
         ),
     )
     return fig
 
 
-def tampilkan_peta(fig, key=None):
+def tampilkan_peta(fig, key=None, nama_unduh="peta_asi_ews_jabar"):
     if fig is None:
         st.info("Tidak ada data untuk ditampilkan pada peta.")
         return
@@ -952,9 +1034,15 @@ def tampilkan_peta(fig, key=None):
         fig,
         use_container_width=True,
         config={
-            "displayModeBar": False,
+            "displayModeBar": True,
+            "displaylogo": False,
             "scrollZoom": True,
             "responsive": True,
+            "toImageButtonOptions": {
+                "format": "png",
+                "filename": nama_unduh,
+                "scale": 3,
+            },
         },
         key=key,
     )
@@ -981,16 +1069,145 @@ with col_hdr2:
     )
 
 
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
+tab0, tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
     [
+        "🚜 Panduan Petani & Dinas",
         "🗺️ Peta Hindcast",
         "📍 Detail Wilayah",
         "📊 Evaluasi & Bootstrap",
         "🌾 Validasi BPS",
         "⬇️ Unduh & Metode",
         "📉 Analisis Galat",
+        "🖼️ Galeri Gambar KTI",
     ]
 )
+
+
+# ============================================================
+# TAB 0 - PANDUAN OPERASIONAL PETANI, PPL & DINAS PERTANIAN
+# ============================================================
+
+with tab0:
+    st.subheader("Sistem Peringatan Dini & Rekomendasi Lapangan (Petani, PPL & Dinas Pertanian)")
+    st.caption(
+        "Pilih Kabupaten/Kota dan bulan ke depan untuk melihat status peringatan dalam bahasa praktis, "
+        "langkah antisipasi budidaya, serta teks laporan siap kirim ke grup WhatsApp kelompok tani."
+    )
+
+    c_tani1, c_tani2 = st.columns([2.2, 1.3])
+    kode_tani = c_tani1.selectbox(
+        "📍 Pilih Kabupaten / Kota Anda:",
+        sorted(nama_kab, key=nama_kab.get),
+        format_func=lambda k: nama_kab[k],
+        key="kab_tani_sel",
+    )
+    h_tani = c_tani2.selectbox(
+        "📅 Pilih Periode Peringatan:",
+        [1, 2, 3],
+        format_func=lambda x: f"H+{x} Bulan ({(pd.Timestamp(basis_hindcast + '-01') + pd.DateOffset(months=x)).strftime('%B %Y')})",
+        key="h_tani_sel",
+    )
+
+    baris_tani = fc[(fc["kab_code"] == kode_tani) & (fc["horizon"] == h_tani)]
+    if baris_tani.empty:
+        st.warning("Data peringatan untuk wilayah dan periode ini belum tersedia.")
+    else:
+        row_t = baris_tani.iloc[0]
+        nm_wil = nama_kab[kode_tani]
+        bln_tgt_str = str(row_t.get("bulan_target", f"H+{h_tani}"))
+        st_asi = str(row_t.get("peringatan_asi", "Normal")) if "peringatan_asi" in row_t else "Normal"
+        st_ndvi = str(row_t.get("indikasi_vegetasi_ndvi", "Normal")) if "indikasi_vegetasi_ndvi" in row_t else "Normal"
+        pemicu_str = row_t.get("DOMINAN", "Kombinasi suhu, penguapan & defisit hujan")
+        luas_sw = float(row_t["SAWAH_KM2"]) if "SAWAH_KM2" in row_t and pd.notna(row_t["SAWAH_KM2"]) else None
+
+        panduan = rekom_aksi_lapangan(st_asi, st_ndvi, pemicu_str)
+
+        st.markdown(
+            f"""
+            <div class="alert-card-tani" style="background-color: {panduan['bg']}; border-left-color: {panduan['warna']};">
+                <div style="font-size: 12px; font-weight: 800; color: {panduan['warna']}; letter-spacing: 0.5px;">
+                    {panduan['level']} • TARGET PERIODE: {bln_tgt_str}
+                </div>
+                <h3 style="margin: 6px 0 8px 0; color: #0F2E26; font-size: 21px;">
+                    {nm_wil} {f"• Luas Sawah Baku: {luas_sw:,.0f} km²" if luas_sw else ""}
+                </h3>
+                <p style="margin: 0; color: #1E3A32; font-size: 14.5px; line-height: 1.6;">
+                    {panduan['ringkas_petani']}
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        m_t1, m_t2, m_t3 = st.columns(3)
+        m_t1.metric("🌡️ Status Cekaman Cuaca (ASI)", st_asi, f"Skor ASI: {row_t['pred_asi']:.2f}" if "pred_asi" in row_t else None)
+        m_t2.metric("🌿 Status Kehijauan Padi (NDVI)", st_ndvi, f"Anomali: {row_t['pred_anom_ndvi']:.2f} SD" if "pred_anom_ndvi" in row_t else None)
+        m_t3.metric("⚡ Faktor Pemicu Dominan", str(panduan["pemicu"]))
+
+        col_act1, col_act2 = st.columns(2)
+        with col_act1:
+            st.markdown("#### 👨‍🌾 Rekomendasi Praktis untuk Petani & Poktan")
+            for idx_a, item_a in enumerate(panduan["aksi_petani"], 1):
+                st.markdown(f"**{idx_a}.** {item_a}")
+
+        with col_act2:
+            st.markdown("#### 🏛️ Rekomendasi Tindak Lanjut Dinas Pertanian & PPL")
+            for idx_d, item_d in enumerate(panduan["aksi_dinas"], 1):
+                st.markdown(f"**{idx_d}.** {item_d}")
+
+        st.divider()
+        st.markdown("#### 📲 Pesan Peringatan Siap Kirim WhatsApp (Grup Poktan / BPP)")
+        teks_wa = (
+            f"*INFO PERINGATAN DINI PERTANIAN (ASI-EWS JABAR)*\n"
+            f"Wilayah: *{nm_wil}*\n"
+            f"Periode Target: *{bln_tgt_str} (H+{h_tani})*\n"
+            f"Status: *{panduan['level']}*\n"
+            f"• Cekaman Cuaca/Atmosfer (ASI): *{st_asi}*\n"
+            f"• Indikasi Vegetasi Sawah (NDVI): *{st_ndvi}*\n"
+            f"• Faktor Utama: {panduan['pemicu']}\n\n"
+            f"*Saran Tindakan Lapangan:*\n"
+            + "\n".join([f"- {x}" for x in panduan["aksi_petani"][:3]])
+            + f"\n\n_Sumber: Sistem ASI-EWS Jawa Barat (Basis {basis_hindcast})_"
+        )
+        st.text_area(
+            "Salin teks di bawah ini untuk dibagikan ke WhatsApp Penyuluh / Kelompok Tani:",
+            value=teks_wa,
+            height=220,
+            key="wa_text_box",
+        )
+
+    st.divider()
+    st.markdown("#### 🚨 Daftar Kabupaten Prioritas Intervensi Dinas Pertanian Jawa Barat")
+    fc_prio = fc[fc["horizon"] == h_tani].copy()
+    kol_prio = "peringatan_asi" if "peringatan_asi" in fc_prio.columns else "indikasi_vegetasi_ndvi"
+    fc_prio["Skor_Prioritas"] = fc_prio[kol_prio].map({"Tinggi": 3, "Waspada": 2, "Normal": 1}).fillna(0)
+    fc_prio = fc_prio.sort_values(
+        by=["Skor_Prioritas", "SAWAH_KM2"] if "SAWAH_KM2" in fc_prio.columns else ["Skor_Prioritas"],
+        ascending=[False, False] if "SAWAH_KM2" in fc_prio.columns else [False],
+    )
+    kol_tampil_prio = [
+        c for c in [
+            "kabupaten",
+            "SAWAH_KM2",
+            "peringatan_asi",
+            "indikasi_vegetasi_ndvi",
+            "DOMINAN",
+        ]
+        if c in fc_prio.columns
+    ]
+    st.dataframe(
+        fc_prio[kol_tampil_prio].rename(
+            columns={
+                "kabupaten": "Kabupaten/Kota",
+                "SAWAH_KM2": "Luas Sawah (km²)",
+                "peringatan_asi": "Status Cuaca (ASI)",
+                "indikasi_vegetasi_ndvi": "Status Tanaman (NDVI)",
+                "DOMINAN": "Pemicu Dominan",
+            }
+        ),
+        hide_index=True,
+        use_container_width=True,
+    )
 
 
 # ============================================================
@@ -1001,13 +1218,24 @@ with tab1:
     st.subheader("Peta Simulasi Hindcast Retrospektif (Keluaran Ganda: ASI & NDVI)")
     st.caption(
         f"📌 Simulasi retrospektif berbasis **{basis_hindcast}** untuk target **{target_hindcast}** (bukan prakiraan real-time). "
-        "Peringatan ASI menunjukkan potensi peningkatan cekaman agroklimat; indikasi NDVI menunjukkan respons vegetasi."
+        "Gunakan tombol kamera di pojok kanan atas peta untuk mengunduh gambar PNG resolusi tinggi untuk KTI."
     )
 
-    col_map, col_control = st.columns([3.3, 1.2])
+    col_map, col_control = st.columns([3.2, 1.3])
 
     with col_control:
         st.markdown("##### ⚙️ Kontrol Peta")
+
+        # Pemilih jenis basemap langsung muncul di sini (tidak tersembunyi di sidebar)
+        gaya_dipilih = st.selectbox(
+            "🗺️ Jenis Tampilan Peta (Basemap)",
+            list(MAP_STYLES.keys()),
+            index=list(MAP_STYLES.keys()).index(st.session_state.pilihan_peta_aktif),
+            key="pilih_basemap_tab1",
+        )
+        if gaya_dipilih != st.session_state.pilihan_peta_aktif:
+            st.session_state.pilihan_peta_aktif = gaya_dipilih
+
         mode = st.radio(
             "Mode pemetaan",
             ["Simulasi hindcast (peringatan)", "Kondisi historis (bulanan)"],
@@ -1122,7 +1350,11 @@ with tab1:
                     category_orders={kol_kat: ["Normal", "Waspada", "Tinggi"]},
                     hover_data=hover_dict,
                 )
-                tampilkan_peta(fig, key="map_forecast")
+                tampilkan_peta(
+                    fig,
+                    key="map_forecast",
+                    nama_unduh=f"peta_hindcast_{target_peta}_{model_lbl}_H{h}",
+                )
         else:
             kolom_var = {
                 "ASI (BMKG)": "asi",
@@ -1149,7 +1381,11 @@ with tab1:
                     range_color=(-2.5, 2.5),
                     hover_data={"kab_code": False},
                 )
-                tampilkan_peta(fig, key="map_historical")
+                tampilkan_peta(
+                    fig,
+                    key="map_historical",
+                    nama_unduh=f"peta_historis_{kolom_var}_{pilih}",
+                )
 
     if mode == "Simulasi hindcast (peringatan)" and not d.empty:
         kol_ringkas = (
@@ -1312,7 +1548,7 @@ with tab2:
                     margin=dict(t=15, b=10, l=10, r=10),
                     legend=dict(orientation="h", y=1.12, x=0),
                 )
-                st.plotly_chart(f1, use_container_width=True, config={"displayModeBar": False})
+                st.plotly_chart(f1, use_container_width=True, config=konfig_unduh(f"asi_komponen_{nama_kab[kode]}"))
             else:
                 st.info("Kolom komponen ASI tidak tersedia.")
 
@@ -1333,7 +1569,7 @@ with tab2:
                     margin=dict(t=15, b=10, l=10, r=10),
                     yaxis_title="Anomali NDVI (SD)",
                 )
-                st.plotly_chart(f2, use_container_width=True, config={"displayModeBar": False})
+                st.plotly_chart(f2, use_container_width=True, config=konfig_unduh(f"ndvi_historis_{nama_kab[kode]}"))
             else:
                 st.info("Kolom ndvi_z tidak tersedia.")
 
@@ -1363,7 +1599,7 @@ with tab2:
                 margin=dict(t=15, b=10, l=10, r=10),
                 legend=dict(orientation="h", y=1.15, x=0),
             )
-            st.plotly_chart(f_enso, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(f_enso, use_container_width=True, config=konfig_unduh("indeks_enso_iod"))
 
         st.markdown("#### Prediksi vs Aktual (Expanding-Window Temporal CV)")
         cc1, cc2, cc3 = st.columns([1.2, 1, 2])
@@ -1424,7 +1660,11 @@ with tab2:
                     yaxis_title="Indeks ASI" if tgt_det == "asi" else "Anomali NDVI (SD)",
                     legend=dict(orientation="h", y=1.15, x=0),
                 )
-                st.plotly_chart(fig_oos, use_container_width=True, config={"displayModeBar": False})
+                st.plotly_chart(
+                    fig_oos,
+                    use_container_width=True,
+                    config=konfig_unduh(f"prediksi_vs_aktual_{nama_kab[kode]}_{tgt_det}_H{hh}"),
+                )
 
         st.markdown("#### Hasil Simulasi Hindcast Wilayah Ini (Dual-Target)")
         kolom_fc = [
@@ -1496,7 +1736,11 @@ with tab3:
                         yaxis_title=metrik,
                         legend=dict(orientation="h", y=1.18, x=0),
                     )
-                    st.plotly_chart(fig_res, use_container_width=True, config={"displayModeBar": False})
+                    st.plotly_chart(
+                        fig_res,
+                        use_container_width=True,
+                        config=konfig_unduh(f"perbandingan_{metrik}_{tgt_tab3}_{skema}"),
+                    )
 
         if {"skema", "horizon", "skenario", "RMSE"}.issubset(res_t.columns):
             st.markdown(f"#### Matriks Perbandingan RMSE Seluruh Skenario ({tgt_tab3.upper()})")
@@ -1505,7 +1749,6 @@ with tab3:
             ).round(3)
             st.dataframe(pv, use_container_width=True)
 
-    # Diagnostik Musiman (hasil_per_musim.csv)
     if D["musim"] is not None and isinstance(D["musim"], pd.DataFrame):
         st.divider()
         st.subheader(f"Performa Model Berdasarkan Musim ({tgt_tab3.upper()})")
@@ -1534,9 +1777,12 @@ with tab3:
                 margin=dict(t=40, b=10, l=10, r=10),
                 legend=dict(orientation="h", y=1.12, x=0),
             )
-            st.plotly_chart(fig_musim, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(
+                fig_musim,
+                use_container_width=True,
+                config=konfig_unduh(f"rmse_musim_{tgt_tab3}_H{h_musim}"),
+            )
 
-    # Uji Year-Cluster Bootstrap Selisih RMSE (bootstrap_selisih_RMSE.csv)
     if D["boot"] is not None and isinstance(D["boot"], pd.DataFrame):
         st.divider()
         st.subheader(f"Uji Signifikansi Year-Cluster Bootstrap Selisih RMSE ({tgt_tab3.upper()}, CI 95%)")
@@ -1568,11 +1814,12 @@ with tab3:
             ]
             st.dataframe(sub_boot, hide_index=True, use_container_width=True)
 
-    # Pentingnya Fitur (SHAP / RF Importance)
     imp_aktif = D["imp_dict"].get(tgt_tab3)
-if imp_aktif is None:
-    imp_aktif = next(iter(D["imp_dict"].values()), None)
+    if imp_aktif is None or (isinstance(imp_aktif, pd.DataFrame) and imp_aktif.empty):
+        imp_aktif = next(iter(D["imp_dict"].values()), None)
+
     if imp_aktif is not None and isinstance(imp_aktif, pd.DataFrame):
+
         st.divider()
         st.subheader(f"Fitur Terpenting Model Utama ({fc_key_aktif}, Target {tgt_tab3.upper()}, H+1)")
         st.caption("Nilai SHAP / importance menunjukkan asosiasi prediktif fitur dalam model, bukan bukti hubungan sebab-akibat.")
@@ -1589,7 +1836,11 @@ if imp_aktif is None:
                 color_discrete_sequence=["#239B75"],
             )
             fig_imp.update_layout(height=460, margin=dict(t=15, b=10, l=10, r=10), yaxis_title="")
-            st.plotly_chart(fig_imp, use_container_width=True, config={"displayModeBar": False})
+            st.plotly_chart(
+                fig_imp,
+                use_container_width=True,
+                config=konfig_unduh(f"feature_importance_{fc_key_aktif}_{tgt_tab3}_H1"),
+            )
 
     if D["sens"] is not None:
         with st.expander("Sensitivitas Bobot ASI (Simulasi Dirichlet)"):
@@ -1653,7 +1904,11 @@ with tab4:
                     yaxis_title="Produktivitas (selisih rerata, ton/ha)",
                     showlegend=False,
                 )
-                st.plotly_chart(fig_bps, use_container_width=True, config={"displayModeBar": False})
+                st.plotly_chart(
+                    fig_bps,
+                    use_container_width=True,
+                    config=konfig_unduh(f"validasi_bps_{pilihan_x}"),
+                )
                 rho_asi = gabung["asi_dm"].corr(
                     gabung["produktivitas_ton_ha_dm"], method="spearman"
                 )
@@ -1721,7 +1976,6 @@ with tab5:
     st.divider()
     st.subheader("Metodologi Penelitian & Klarifikasi Interpretasi (Pipeline v8)")
     periode = meta.get("periode_data", ["-", "-"])
-    klimatologi = meta.get("klimatologi", ["-", "-"])
     skenario = meta.get("skenario", [])
     comp_hc = meta.get("skenario_perbandingan_hindcast", ["A_dasar", "B_CWB3", "D_ENSO_CH"])
 
@@ -1757,11 +2011,11 @@ with tab5:
 
 
 # ============================================================
-# TAB 6 - EVALUASI ERROR MODEL DAN DETEKSI KEJADIAN
+# TAB 6 - EVALUASI ERROR MODEL DAN CONFUSION MATRIX KTI
 # ============================================================
 
 with tab6:
-    st.subheader("Evaluasi Error Model (Expanding-Window Temporal CV)")
+    st.subheader("Evaluasi Error Model & Confusion Matrix (Expanding-Window Temporal CV)")
 
     if D["det"] is not None and isinstance(D["det"], pd.DataFrame):
         with st.expander("📋 Ringkasan Kinerja Deteksi Ambang Peringatan ASI & Indikasi NDVI (deteksi_ambang_risiko.csv)", expanded=True):
@@ -1831,7 +2085,7 @@ with tab6:
                     satuan_lbl = "Indeks ASI" if tgt_eval == "asi" else "Anomali NDVI (SD)"
                     st.caption(
                         f"Satuan galat = **{satuan_lbl}**. "
-                        "Bias negatif berarti nilai prediksi rata-rata lebih rendah daripada aktual."
+                        "Gunakan ikon kamera di pojok kanan atas grafik untuk mengunduh gambar PNG resolusi tinggi (~300 DPI)."
                     )
 
                     a, b = st.columns(2)
@@ -1859,7 +2113,11 @@ with tab6:
                             line=dict(color="black", dash="dash"),
                         )
                         fs.update_layout(height=380, margin=dict(t=38, b=10, l=10, r=10))
-                        st.plotly_chart(fs, use_container_width=True, config={"displayModeBar": False})
+                        st.plotly_chart(
+                            fs,
+                            use_container_width=True,
+                            config=konfig_unduh(f"scatter_aktual_pred_{tgt_eval}_{sk}_H{hh}"),
+                        )
 
                     with b:
                         fh = px.histogram(
@@ -1872,7 +2130,11 @@ with tab6:
                         )
                         fh.add_vline(x=0, line_dash="dash")
                         fh.update_layout(height=380, margin=dict(t=38, b=10, l=10, r=10))
-                        st.plotly_chart(fh, use_container_width=True, config={"displayModeBar": False})
+                        st.plotly_chart(
+                            fh,
+                            use_container_width=True,
+                            config=konfig_unduh(f"histogram_galat_{tgt_eval}_{sk}_H{hh}"),
+                        )
 
                     if "kabupaten" in o.columns:
                         c, d_ = st.columns(2)
@@ -1892,7 +2154,11 @@ with tab6:
                                 color_discrete_sequence=["#1E6351"],
                             )
                             fk.update_layout(height=500, margin=dict(t=38, b=10, l=10, r=10))
-                            st.plotly_chart(fk, use_container_width=True, config={"displayModeBar": False})
+                            st.plotly_chart(
+                                fk,
+                                use_container_width=True,
+                                config=konfig_unduh(f"rmse_kabupaten_{tgt_eval}_{sk}_H{hh}"),
+                            )
 
                         with d_:
                             o["bln_target"] = o["tgt_date"].dt.month
@@ -1913,7 +2179,11 @@ with tab6:
                                 margin=dict(t=38, b=10, l=10, r=10),
                                 xaxis=dict(dtick=1, title="Bulan target"),
                             )
-                            st.plotly_chart(fb, use_container_width=True, config={"displayModeBar": False})
+                            st.plotly_chart(
+                                fb,
+                                use_container_width=True,
+                                config=konfig_unduh(f"rmse_bulanan_{tgt_eval}_{sk}_H{hh}"),
+                            )
 
                     # Confusion matrix 3 kelas peringatan/indikasi
                     st.subheader(
@@ -1961,8 +2231,17 @@ with tab6:
                         color_continuous_scale="Greens",
                         labels=dict(x="Kelas prediksi", y="Kelas aktual", color=""),
                     )
-                    fcm.update_layout(height=400, margin=dict(t=15, b=10, l=10, r=10))
-                    st.plotly_chart(fcm, use_container_width=True, config={"displayModeBar": False})
+                    fcm.update_layout(
+                        height=440,
+                        margin=dict(t=45, b=20, l=20, r=20),
+                        title=f"Confusion Matrix ({tgt_eval.upper()} | {sk} | H+{hh})",
+                        font=dict(size=13, color="#0F2E26"),
+                    )
+                    st.plotly_chart(
+                        fcm,
+                        use_container_width=True,
+                        config=konfig_unduh(f"confusion_matrix_{tgt_eval}_{sk}_H{hh}"),
+                    )
 
                     rows = []
                     for cl in urut:
@@ -1991,3 +2270,87 @@ with tab6:
                         if pd.notna(akurasi)
                         else "**Akurasi keseluruhan 3 kelas:** N/A"
                     )
+
+
+# ============================================================
+# TAB 7 - GALERI GAMBAR & GRAFIK LOKAL UNTUK KTI
+# ============================================================
+
+with tab7:
+    st.subheader("Galeri Gambar & Grafik Hasil Analisis Lokal (Siap KTI)")
+    st.caption(
+        f"Memindai otomatis seluruh file gambar (.png, .jpg, .jpeg) di folder hasil aktif (`{RES_AKTIF}`) "
+        f"dan folder utama (`{OUT}`)."
+    )
+
+    ekstensi_gambar = {".png", ".jpg", ".jpeg", ".webp"}
+    semua_gambar = sorted(
+        [
+            p for p in OUT.rglob("*")
+            if p.is_file() and p.suffix.lower() in ekstensi_gambar
+        ],
+        key=lambda p: (0 if RES_AKTIF in p.parents else 1, p.name.lower()),
+    )
+
+    if not semua_gambar:
+        st.warning(
+            f"Belum ditemukan file gambar (.png / .jpg) di dalam `{OUT}`. "
+            "Pastikan skrip `02_ml_v8.py` menyimpan plot ke folder tersebut, atau gunakan "
+            "ikon kamera di pojok kanan atas grafik pada Tab 1, Tab 3, dan Tab 6 untuk mengunduh gambar PNG resolusi tinggi."
+        )
+    else:
+        col_f1, col_f2, col_f3 = st.columns([2.2, 1.0, 1.4])
+        kata_kunci = col_f1.text_input(
+            "Filter nama gambar (contoh: confusion, cm, rmse, shap, peta, asi, ndvi)",
+            value="",
+            key="filter_gambar_kti",
+        ).strip().lower()
+
+        kolom_grid = col_f2.selectbox(
+            "Jumlah kolom tampilan",
+            [1, 2, 3],
+            index=1,
+            key="kolom_galeri_kti",
+        )
+
+        zip_buf = io.BytesIO()
+        with zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED) as zf:
+            for g_path in semua_gambar:
+                zf.write(g_path, arcname=str(g_path.relative_to(OUT)))
+
+        with col_f3:
+            st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+            st.download_button(
+                f"📦 Unduh Semua ({len(semua_gambar)} Gambar ZIP)",
+                data=zip_buf.getvalue(),
+                file_name=f"Gambar_KTI_{st.session_state.folder_aktif}.zip",
+                mime="application/zip",
+                use_container_width=True,
+            )
+
+        gambar_terfilter = [
+            p for p in semua_gambar
+            if not kata_kunci or kata_kunci in p.name.lower() or kata_kunci in str(p.parent.name).lower()
+        ]
+
+        st.write(f"Menampilkan **{len(gambar_terfilter)}** dari **{len(semua_gambar)}** file gambar lokal.")
+
+        if not gambar_terfilter:
+            st.info("Tidak ada gambar yang cocok dengan kata kunci filter.")
+        else:
+            for idx in range(0, len(gambar_terfilter), kolom_grid):
+                cols = st.columns(kolom_grid)
+                for col_i, img_path in enumerate(gambar_terfilter[idx : idx + kolom_grid]):
+                    with cols[col_i]:
+                        rel_name = str(img_path.relative_to(OUT))
+                        st.markdown(f"**`{rel_name}`**")
+                        st.image(str(img_path), use_container_width=True)
+                        st.download_button(
+                            label=f"⬇️ Unduh {img_path.name}",
+                            data=img_path.read_bytes(),
+                            file_name=img_path.name,
+                            mime=f"image/{img_path.suffix.lstrip('.').lower()}",
+                            key=f"dl_img_{idx}_{col_i}_{rel_name}",
+                            use_container_width=True,
+                        )
+                        st.divider()

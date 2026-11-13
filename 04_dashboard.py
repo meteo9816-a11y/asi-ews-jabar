@@ -32,10 +32,10 @@ import streamlit as st
 
 JUDUL_SINGKAT = "ASI-EWS Jawa Barat"
 JUDUL_KTI = (
-    "ASI-EWS: Adaptive Agroclimatic Stress Intelligence – "
-    "Sistem Peringatan Dini Cekaman Atmosfer dan Lahan Pertanian "
+    "ASI-EWS: Sistem Peringatan Dini Kondisi Iklim Tanaman Padi "
     "Berbasis Machine Learning dan Data Satelit di Jawa Barat"
 )
+
 
 BASE_DIR = Path(__file__).resolve().parent
 LOKAL_OPTIONAL = Path(r"D:\LOMBAAGRI\OUTPUT_ASI_JABAR")
@@ -814,7 +814,7 @@ if st.session_state.halaman == "beranda":
         </div>
         <div class="landing-hero">
             <div class="landing-badge">🌱 Karya Tulis Ilmiah • {versi_aktif} • Dual-Target Machine Learning (ASI & NDVI)</div>
-            <h1><span class="accent">ASI-EWS:</span> Adaptive Agroclimatic Stress Intelligence – Sistem Peringatan Dini Cekaman Atmosfer dan Lahan Pertanian Berbasis Machine Learning dan Data Satelit di Jawa Barat</h1>
+            <h1><span class="accent">ASI-EWS:</span> Sistem Peringatan Dini Kondisi Iklim Tanaman Padi Berbasis Machine Learning dan Data Satelit di Jawa Barat</h1>
             <p>
                 Sistem peringatan dini berbasis <strong>Random Forest</strong> dengan desain keluaran ganda:
                 <strong>(1) Target Utama:</strong> memprediksi <em>Atmospheric Stress Index (ASI)</em> untuk deteksi dini potensi
@@ -823,6 +823,7 @@ if st.session_state.halaman == "beranda":
             </p>
         </div>
         """,
+
         unsafe_allow_html=True,
     )
 
